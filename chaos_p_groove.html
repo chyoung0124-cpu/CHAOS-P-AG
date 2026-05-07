@@ -1,0 +1,1505 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CHAOS P — Groovebox</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=DM+Sans:wght@300;400;500&display=swap');
+
+:root {
+  --bg:     #07070f;
+  --bg2:    #0d0d1a;
+  --bg3:    #131320;
+  --bg4:    #1a1a2a;
+  --border: #22223a;
+  --border2:#2e2e4a;
+  --text:   #b8b8d0;
+  --dim:    #404058;
+  --bright: #e8e8f8;
+  --lo:     #3dd68c;
+  --mid:    #818cf8;
+  --hi:     #fb923c;
+  --danger: #f87171;
+  --chord:  #e879f9;
+  --accent: #38bdf8;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; user-select: none; }
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'Space Mono', monospace;
+  font-size: 11px;
+  min-height: 100vh;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+/* ── HEADER ── */
+.header {
+  display: flex;
+  align-items: baseline;
+  gap: 14px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--border);
+}
+.header h1 { font-size: 14px; letter-spacing: .25em; color: var(--bright); }
+.header .sub { font-size: 8px; color: var(--dim); letter-spacing: .15em; }
+
+/* ── BARS ── */
+.bar {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  flex-wrap: wrap;
+  padding: 8px 10px;
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: 3px;
+}
+.g-label { font-size: 7px; color: var(--dim); letter-spacing: .18em; }
+.sep { width: 1px; height: 16px; background: var(--border); margin: 0 2px; }
+
+.tbtn {
+  padding: 4px 10px;
+  border: 1px solid var(--border);
+  background: var(--bg3);
+  color: var(--text);
+  font-family: 'Space Mono', monospace;
+  font-size: 8px;
+  font-weight: 700;
+  cursor: pointer;
+  border-radius: 2px;
+  letter-spacing: .08em;
+  transition: all .1s;
+}
+.tbtn:hover  { border-color: var(--text); color: var(--bright); }
+.tbtn.active { border-color: var(--accent); color: var(--accent); background: rgba(56,189,248,.08); }
+.tbtn.muted  { border-color: var(--danger); color: var(--danger); }
+
+.bpm-row { display: flex; align-items: center; gap: 4px; }
+.bpm-btn {
+  width: 16px; height: 16px;
+  border: 1px solid var(--border); background: var(--bg3); color: var(--text);
+  font-family: 'Space Mono', monospace; font-size: 11px;
+  cursor: pointer; border-radius: 2px;
+  display: flex; align-items: center; justify-content: center;
+  transition: all .1s;
+}
+.bpm-btn:hover { border-color: var(--text); }
+.bpm-val { font-size: 14px; font-weight: 700; color: var(--bright); min-width: 28px; text-align: center; }
+
+/* ── TIER ── */
+.tier-row { display: flex; gap: 3px; }
+.t-btn {
+  padding: 4px 10px;
+  border: 1px solid var(--border);
+  background: transparent;
+  color: var(--dim);
+  font-family: 'Space Mono', monospace;
+  font-size: 8px; font-weight: 700;
+  cursor: pointer; border-radius: 2px;
+  transition: all .1s;
+}
+.t-btn:hover { color: var(--text); }
+.t-btn.off.active  { border-color: #444; color: #888; background: rgba(255,255,255,.03); }
+.t-btn.lo.active   { border-color: var(--lo);  color: var(--lo);  background: rgba(61,214,140,.07); }
+.t-btn.mid.active  { border-color: var(--mid); color: var(--mid); background: rgba(129,140,248,.07); }
+.t-btn.hi.active   { border-color: var(--hi);  color: var(--hi);  background: rgba(251,146,60,.07); }
+
+.slider-row { display: flex; align-items: center; gap: 6px; flex: 1; min-width: 140px; }
+.sl-label { font-size: 7px; color: var(--dim); letter-spacing: .12em; }
+.sl-val { font-size: 13px; font-weight: 700; color: var(--bright); min-width: 24px; text-align: right; }
+input[type=range] {
+  flex: 1; height: 2px; -webkit-appearance: none;
+  background: var(--bg4); border-radius: 2px; outline: none; cursor: pointer;
+}
+input[type=range]::-webkit-slider-thumb {
+  -webkit-appearance: none; width: 12px; height: 12px;
+  border-radius: 50%; background: var(--mid); border: 2px solid var(--bg);
+}
+
+.status-pill {
+  font-size: 7px; color: var(--dim);
+  font-family: 'DM Sans', sans-serif;
+  padding: 3px 8px;
+  border: 1px solid var(--border);
+  border-radius: 2px; background: var(--bg3);
+  white-space: nowrap; min-width: 110px;
+}
+.sp-lo  { color: var(--lo); }
+.sp-mid { color: var(--mid); }
+.sp-hi  { color: var(--hi); }
+.sp-ch  { color: var(--chord); }
+.sp-spr { color: var(--danger); }
+
+/* ── KEY BAR ── */
+.key-row { display: flex; gap: 3px; flex-wrap: wrap; align-items: center; }
+.k-btn {
+  padding: 2px 5px;
+  border: 1px solid var(--border);
+  background: transparent; color: var(--dim);
+  font-family: 'Space Mono', monospace; font-size: 7px;
+  cursor: pointer; border-radius: 2px; transition: all .1s;
+}
+.k-btn:hover { color: var(--text); border-color: var(--text); }
+.k-btn.active { border-color: var(--mid); color: var(--mid); background: rgba(129,140,248,.08); }
+.k-det { font-size: 8px; color: var(--bright); font-weight: 700; }
+
+/* ── PAGE BAR ── */
+.pg-btns { display: flex; gap: 3px; }
+.pg-btn {
+  width: 22px; height: 22px;
+  border: 1px solid var(--border); background: var(--bg3); color: var(--dim);
+  font-family: 'Space Mono', monospace; font-size: 8px; font-weight: 700;
+  cursor: pointer; border-radius: 2px;
+  display: flex; align-items: center; justify-content: center;
+  transition: all .1s;
+}
+.pg-btn:hover { border-color: var(--text); color: var(--text); }
+.pg-btn.cur  { border-color: var(--accent); color: var(--accent); background: rgba(56,189,248,.08); }
+.pg-btn.has  { color: var(--text); border-color: var(--border2); }
+.pg-btn.seq  { box-shadow: 0 0 0 1px var(--mid) inset; }
+.pg-add, .pg-rm {
+  padding: 3px 8px;
+  border: 1px solid var(--border); background: var(--bg3); color: var(--dim);
+  font-family: 'Space Mono', monospace; font-size: 10px; font-weight: 700;
+  cursor: pointer; border-radius: 2px; transition: all .1s;
+}
+.pg-add:hover { border-color: var(--lo); color: var(--lo); }
+.pg-rm:hover  { border-color: var(--danger); color: var(--danger); }
+.pg-add:disabled, .pg-rm:disabled { opacity: .3; cursor: default; }
+
+/* ── GROOVEBOX LANE ── */
+.groove-wrap {
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: 3px;
+  padding: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.step-nums {
+  display: flex;
+  gap: 4px;
+}
+.step-num-label {
+  flex: 1;
+  text-align: center;
+  font-size: 6px;
+  color: var(--dim);
+}
+.step-num-label.beat { color: var(--border2); }
+.step-num-label.playing { color: var(--accent); font-weight: 700; }
+
+.steps-row {
+  display: flex;
+  gap: 4px;
+}
+
+/* The groovebox step cell */
+.step-cell {
+  flex: 1;
+  height: 72px;
+  border-radius: 3px;
+  border: 1px solid var(--border);
+  background: var(--bg3);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-end;
+  padding-bottom: 5px;
+  position: relative;
+  cursor: pointer;
+  transition: border-color .08s, background .08s;
+  touch-action: none;
+}
+.step-cell:hover { border-color: var(--border2); background: var(--bg4); }
+
+/* active = has note */
+.step-cell.on {
+  background: var(--bg4);
+  border-color: var(--accent);
+  cursor: ns-resize;
+}
+.step-cell.on:hover { border-color: var(--accent); }
+
+/* playing highlight */
+.step-cell.playing {
+  background: rgba(129,140,248,.1);
+  border-color: var(--mid) !important;
+  box-shadow: 0 0 8px rgba(129,140,248,.2);
+}
+.step-cell.on.playing {
+  background: rgba(56,189,248,.12);
+  border-color: var(--accent) !important;
+  box-shadow: 0 0 10px rgba(56,189,248,.3);
+}
+
+/* pitch bar — fills from bottom, height = pitch position */
+.pitch-bar {
+  position: absolute;
+  bottom: 0; left: 0; right: 0;
+  border-radius: 0 0 2px 2px;
+  background: rgba(56,189,248,.15);
+  transition: height .04s;
+  pointer-events: none;
+}
+
+/* chaos pitch bar */
+.chaos-bar-el {
+  position: absolute;
+  bottom: 0; left: 0; right: 0;
+  border-radius: 0 0 2px 2px;
+  opacity: .5;
+  pointer-events: none;
+}
+
+/* note name label */
+.note-name {
+  position: relative;
+  z-index: 2;
+  font-size: 9px;
+  font-weight: 700;
+  color: var(--accent);
+  line-height: 1;
+  letter-spacing: .04em;
+}
+.step-cell:not(.on) .note-name { display: none; }
+
+/* chaos note name (small, above) */
+.chaos-name {
+  position: absolute;
+  top: 5px; left: 0; right: 0;
+  text-align: center;
+  font-size: 7px;
+  font-weight: 700;
+  z-index: 2;
+  pointer-events: none;
+  opacity: .9;
+}
+
+/* beat marker dot */
+.beat-dot {
+  position: absolute;
+  top: 4px; left: 50%;
+  transform: translateX(-50%);
+  width: 3px; height: 3px;
+  border-radius: 50%;
+  background: var(--border2);
+  pointer-events: none;
+}
+.step-cell.beat-start .beat-dot { background: var(--dim); }
+
+/* ── CANVAS ── */
+.canvas-wrap {
+  background: var(--bg3);
+  border: 1px solid var(--border);
+  border-radius: 3px;
+  height: 52px;
+  overflow: hidden;
+}
+canvas { display: block; width: 100%; height: 100%; }
+
+/* ── LOG ── */
+.log-panel {
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: 3px;
+  padding: 8px 10px;
+}
+.log-title { font-size: 7px; color: var(--dim); letter-spacing: .18em; margin-bottom: 5px; }
+.log-scroll { height: 60px; overflow-y: auto; }
+.log-entry { font-size: 7px; color: var(--dim); line-height: 1.9; border-bottom: 1px solid var(--border); font-family: 'DM Sans', sans-serif; }
+
+body.dragging * { cursor: ns-resize !important; }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>CHAOS P</h1>
+  <div class="sub">groovebox editor · 16–128 steps · drag to pitch</div>
+</div>
+
+<!-- TRANSPORT -->
+<div class="bar">
+  <span class="g-label">TRANSPORT</span>
+  <button class="tbtn" id="playBtn" onclick="togglePlay()">▶ PLAY</button>
+  <button class="tbtn" id="muteBtn" onclick="toggleMute()">MUTE</button>
+  <button class="tbtn" onclick="clearAll()">CLEAR</button>
+  <div class="sep"></div>
+  <div class="bpm-row">
+    <button class="bpm-btn" onclick="changeBpm(-5)">−</button>
+    <div class="bpm-val" id="bpmVal">90</div>
+    <button class="bpm-btn" onclick="changeBpm(5)">+</button>
+    <span class="g-label">BPM</span>
+  </div>
+  <div class="sep"></div>
+  <span class="g-label">LOOP</span>
+  <span style="font-size:9px;color:var(--bright);font-weight:700;min-width:20px" id="loopCount">0</span>
+  <div class="sep"></div>
+  <span class="g-label">STEP</span>
+  <span style="font-size:9px;color:var(--bright);font-weight:700;min-width:26px" id="globalStep">—</span>
+</div>
+
+<!-- CHAOS -->
+<div class="bar">
+  <span class="g-label">TIER</span>
+  <div class="tier-row" id="tierRow"></div>
+  <div class="sep"></div>
+  <div class="slider-row">
+    <span class="sl-label">VAL</span>
+    <input type="range" min="0" max="100" value="0" oninput="setLinear(this.value)" id="linearSlider">
+    <span class="sl-val" id="slVal">0</span>
+  </div>
+  <div class="status-pill" id="statusPill">CHAOS P <span class="sp-mid">OFF</span></div>
+</div>
+
+<!-- KEY -->
+<div class="bar">
+  <span class="g-label">ROOT</span>
+  <div class="key-row" id="rootBtns"></div>
+  <div class="sep"></div>
+  <span class="g-label">SCALE</span>
+  <div class="key-row" id="scaleBtns"></div>
+  <div class="sep"></div>
+  <span class="g-label">DETECT</span>
+  <span class="k-det" id="keyDet">—</span>
+</div>
+
+<!-- PAGES -->
+<div class="bar">
+  <span class="g-label">PAGES</span>
+  <div class="pg-btns" id="pgBtns"></div>
+  <button class="pg-add" id="pgAdd" onclick="addPage()">+</button>
+  <button class="pg-rm"  id="pgRm"  onclick="removePage()">−</button>
+  <div class="sep"></div>
+  <span class="g-label">TOTAL</span>
+  <span style="font-size:8px;color:var(--bright);font-weight:700" id="totalStepsLabel">16</span>
+  <span class="g-label">STEPS</span>
+</div>
+
+<!-- GROOVEBOX LANE -->
+<div class="groove-wrap">
+  <div class="step-nums"  id="stepNums"></div>
+  <div class="steps-row"  id="stepsRow"></div>
+</div>
+
+<!-- CANVAS -->
+<div class="canvas-wrap">
+  <canvas id="cvs"></canvas>
+</div>
+
+<!-- LOG -->
+<div class="log-panel">
+  <div class="log-title">CHAOS LOG</div>
+  <div class="log-scroll" id="logScroll"></div>
+</div>
+
+<script>
+// ═══════════════════════════════════════════════
+// CONSTANTS
+// ═══════════════════════════════════════════════
+const PC_NAMES = ['C','C#','D','Eb','E','F','F#','G','Ab','A','Bb','B'];
+const NOTE_MIN = 48;  // C3
+const NOTE_MAX = 84;  // C6
+const NOTE_DEF = 60;  // C4
+const SCALE_TEMPLATES = {
+  'Chr':  [0,1,2,3,4,5,6,7,8,9,10,11],
+  'Maj':  [0,2,4,5,7,9,11],
+  'Min':  [0,2,3,5,7,8,10],
+  'Dor':  [0,2,3,5,7,9,10],
+  'Mix':  [0,2,4,5,7,9,10],
+  'Pent': [0,2,4,7,9],
+  'Blues':[0,3,5,6,7,10],
+  'Harm': [0,2,3,5,7,8,11],
+};
+
+function midiName(n) {
+  if (n === null || !isFinite(n)) return '—';
+  return PC_NAMES[n % 12] + (Math.floor(n / 12) - 1);
+}
+
+// pitch → 0..1 normalized for bar height
+function pitchNorm(midi) {
+  return (midi - NOTE_MIN) / (NOTE_MAX - NOTE_MIN);
+}
+
+// ═══════════════════════════════════════════════
+// PATTERN
+// ═══════════════════════════════════════════════
+let numPages  = 1;
+let pattern   = new Array(16).fill(null);   // null = no note, number = midi
+let curPage   = 0;
+
+function totalSteps() { return numPages * 16; }
+function pageOff(p)   { return p * 16; }
+
+// ═══════════════════════════════════════════════
+// SCALE / KEY
+// ═══════════════════════════════════════════════
+let scaleRoot = 0;
+let scaleType = 'Maj';
+let scale     = buildScale(0, 'Maj');
+
+let detRoot = null;
+
+function buildScale(root, type) {
+  const tmpl = SCALE_TEMPLATES[type] || SCALE_TEMPLATES['Maj'];
+  const pc   = tmpl.map(i => (root + i) % 12);
+  const notes = [];
+  for (let oct = 2; oct <= 7; oct++) for (const p of pc) notes.push(oct * 12 + p);
+  return { pc, notes: notes.sort((a, b) => a - b) };
+}
+
+function nearestScaleNote(midi, sc) {
+  let best = sc.notes[0], bestD = 999;
+  for (const n of sc.notes) { const d = Math.abs(n - midi); if (d < bestD) { bestD = d; best = n; } }
+  return best;
+}
+function scaleIdxOf(midi, sc) { return sc.notes.indexOf(nearestScaleNote(midi, sc)); }
+function scaleNoteAt(idx, sc) { return sc.notes[Math.max(0, Math.min(sc.notes.length - 1, idx))]; }
+function classifyNote(midi, sc) {
+  const pc  = ((midi % 12) + 12) % 12;
+  const nst = nearestScaleNote(midi, sc);
+  const idx = scaleIdxOf(midi, sc);
+  const off = midi - nst;
+  if (sc.pc.includes(pc))     return { type: 'in_scale',    nearestScaleIdx: idx, semitoneOffset: 0   };
+  if (Math.abs(off) === 1)    return { type: 'chromatic',   nearestScaleIdx: idx, semitoneOffset: off };
+  return                             { type: 'out_of_scale', nearestScaleIdx: idx, semitoneOffset: off };
+}
+
+// Krumhansl-Schmuckler
+const KS_MAJ = [6.35,2.23,3.48,2.33,4.38,4.09,2.52,5.19,2.39,3.66,2.29,2.88];
+const KS_MIN = [6.33,2.68,3.52,5.38,2.60,3.53,2.54,4.75,3.98,2.69,3.34,3.17];
+
+function detectKey() {
+  const notes = pattern.filter(n => n !== null);
+  if (notes.length < 3) { document.getElementById('keyDet').textContent = '—'; detRoot = null; return; }
+  const hist = new Array(12).fill(0);
+  for (const n of notes) hist[n % 12]++;
+  const norm = hist.map(h => h / notes.length);
+  // sum over both major and minor profiles per root, take best root by max combined score
+  const rootScore = new Array(12).fill(0);
+  for (let r = 0; r < 12; r++) {
+    let bestCorr = -Infinity;
+    for (const prof of [KS_MAJ, KS_MIN]) {
+      const avgN = norm.reduce((a,b) => a+b, 0) / 12;
+      const avgP = prof.reduce((a,b) => a+b, 0) / 12;
+      let dot = 0, na = 0, nb = 0;
+      for (let pc = 0; pc < 12; pc++) {
+        const pi = (pc - r + 12) % 12;
+        dot += (norm[pc] - avgN) * (prof[pi] - avgP);
+        na  += (norm[pc] - avgN) ** 2;
+        nb  += (prof[pi] - avgP) ** 2;
+      }
+      const corr = (na * nb) > 0 ? dot / Math.sqrt(na * nb) : 0;
+      if (corr > bestCorr) bestCorr = corr;
+    }
+    rootScore[r] = bestCorr;
+  }
+  const bRoot = rootScore.indexOf(Math.max(...rootScore));
+  detRoot = bRoot;
+  document.getElementById('keyDet').textContent = PC_NAMES[bRoot];
+  // auto-apply root only — scale type stays user-controlled
+  if (scaleRoot !== bRoot) {
+    scaleRoot = bRoot;
+    scale = buildScale(scaleRoot, scaleType);
+    updateKeyUI();
+    rebuildChaosState();
+  }
+}
+
+function updateKeyUI() {
+  document.querySelectorAll('#rootBtns .k-btn').forEach((b, i) => b.classList.toggle('active', i === scaleRoot));
+  document.querySelectorAll('#scaleBtns .k-btn').forEach(b => b.classList.toggle('active', b.dataset.t === scaleType));
+}
+
+// ═══════════════════════════════════════════════
+// CHAOS ENGINE
+// ═══════════════════════════════════════════════
+let tier   = 'OFF';
+let linear = 0;
+let muted  = false;
+let loopCount = 0;
+
+let deviations          = [];
+let committedDeviations = [];
+let hiDeviations        = [];
+let chordMap   = {};
+let phase      = 'evolving';
+let phaseCountdown = 0;
+let springPressure = 0;
+let avgDrift   = 0;
+
+function rebuildChaosState() {
+  const S = totalSteps();
+  deviations          = new Array(S).fill(0);
+  committedDeviations = new Array(S).fill(0);
+  hiDeviations        = new Array(S).fill(0);
+  chordMap = {}; phase = 'evolving'; phaseCountdown = 0; springPressure = 0; avgDrift = 0;
+}
+
+function buildCtx() {
+  const S = totalSteps();
+  const noteSteps    = pattern.map((n, i) => n !== null ? i : -1).filter(i => i >= 0);
+  const noteDensity  = noteSteps.length / S || 0.1;
+  const lengthScale  = 32 / S;
+  const densityScale = Math.max(0.3, noteDensity * 2);
+  let contourRange   = 0;
+  if (noteSteps.length > 1) {
+    const degs = noteSteps.map(i => scaleIdxOf(pattern[i], scale));
+    contourRange = Math.max(...degs) - Math.min(...degs);
+  }
+  // low diversity → boost drift range so chaos has room to move
+  const div = pitchDiversity();
+  const driftMaxScale = Math.max(0.5, Math.min(1.6,
+    (contourRange / 4 || 0.8) * div + 1.6 * (1 - div)
+  ));
+  return {
+    phraseLeanScale: Math.max(0.18, Math.min(0.75, 0.35 * Math.pow(lengthScale, 0.5))),
+    driftScale:      Math.pow(lengthScale, 0.6),
+    stableLoopScale: Math.pow(1 / lengthScale, 0.4),
+    ornamentScale:   Math.pow(lengthScale, 0.28),
+    intervalScale:   Math.pow(densityScale, 0.3),
+    driftMaxScale,
+  };
+}
+
+// pitch diversity: 0 = all same, 1 = fully varied
+function pitchDiversity() {
+  const notes = pattern.filter(n => n !== null);
+  if (notes.length === 0) return 1;
+  const unique = new Set(notes).size;
+  // normalise: 1 unique = 0, notes.length unique = 1
+  // use sqrt to make mid-range diversity feel natural
+  return Math.sqrt((unique - 1) / Math.max(1, notes.length - 1));
+}
+
+function buildRoleScores() {
+  const S = totalSteps();
+  const noteSteps = pattern.map((n, i) => n !== null ? i : -1).filter(i => i >= 0);
+  if (!noteSteps.length) return new Array(S).fill(0);
+  const first = noteSteps[0], last = noteSteps[noteSteps.length - 1];
+  const posDens = [0,0,0,0];
+  for (const i of noteSteps) posDens[i % 4]++;
+  const maxDens = Math.max(...posDens) || 1;
+
+  const freq = {};
+  for (const i of noteSteps) freq[pattern[i]] = (freq[pattern[i]] || 0) + 1;
+  const maxFreq = Math.max(...Object.values(freq));
+
+  // diversity coefficient: low diversity → freq weight shrinks,
+  // position/beat weight takes over, fewer steps locked as anchors
+  const div = pitchDiversity();
+  const freqWeight = 0.28 * div;         // 0 when flat, 0.28 when fully varied
+  const posWeight  = 0.22 + 0.06 * (1 - div); // slightly boosted when flat
+  const beatWeight = 0.12 + 0.04 * (1 - div);
+
+  return pattern.map((note, i) => {
+    if (note === null) return 0;
+    const freqS = (freq[note] / maxFreq) * freqWeight;
+    const posS  = (posDens[i % 4] / maxDens) * posWeight;
+    // only true structural anchors (first/last) get a bonus
+    const anchS = (i === first || i === last) ? 0.15 : 0;
+    const beatS = beatWeight;
+    let contS   = 0;
+    const prev  = pattern.slice(0, i).filter(n => n !== null).slice(-2);
+    const next  = pattern.slice(i + 1).filter(n => n !== null).slice(0, 2);
+    if (prev.length && next.length) {
+      if (prev.every(p => p < note) && next.every(n => n < note)) contS = 0.15 * div;
+      if (prev.every(p => p > note) && next.every(n => n > note)) contS = 0.15 * div;
+    }
+    return Math.min(1, freqS + posS + anchS + beatS + contS);
+  });
+}
+
+function getTierParams() {
+  const v    = linear / 100;
+  const ctx  = buildCtx();
+  const logV = Math.log1p(v * 9) / Math.log1p(9);
+  if (tier === 'OFF') return null;
+
+  if (tier === 'LO') return {
+    ornamentActivity:     0.03 + logV * 0.44,
+    wideOrnamentActivity: v > 0.5 ? Math.pow((v - 0.5) * 2, 2) * 0.12 : 0,
+    ornamentScale: ctx.ornamentScale,
+    allowTension:  false,
+    hasChord:      false,
+  };
+
+  if (tier === 'MID') return {
+    // identical to LO ornament system, only difference is chord layer
+    ornamentActivity:     0.03 + logV * 0.44,
+    wideOrnamentActivity: v > 0.5 ? Math.pow((v - 0.5) * 2, 2) * 0.12 : 0,
+    ornamentScale: ctx.ornamentScale,
+    allowTension:  false,
+    hasChord:      true,
+    chordMaxVoices:   v < 0.5 ? 2 : 3,
+    chordSeventh:     v > 0.7,
+    chordProbability: 0.15 + logV * 0.45,
+    chordThreshold:   0.5,
+    chordSpreadMs:    10 + v * 15,
+  };
+
+  if (tier === 'HI') {
+    const dr  = v < 0.4 ? 0 : v > 0.7 ? 1 : (v - 0.4) / 0.3;
+    const emd = Math.max(1, Math.round((2 + Math.round(v * 3)) * ctx.driftMaxScale));
+    const sl  = Math.max(0, Math.round((2 - v * 2.5) * ctx.stableLoopScale * (1 - dr)));
+    return {
+      driftRatio: dr, evolveMaxDrift: emd, stableLoops: sl,
+      ornamentActivity: 0.2 + logV * 0.55, ornamentMaxDrift: 1 + Math.round(v * 0.8),
+      ornamentScale: ctx.ornamentScale, allowTension: true,
+      contourWeight: 0.6, maxStepInterval: Math.max(2, Math.round((2 + v * 4) * ctx.intervalScale)),
+      phraseLeanScale: ctx.phraseLeanScale * (1 + v * 0.5),
+      driftIncrement: (0.8 + v * 2.5) * ctx.driftScale * 1.4,
+      springThreshold: 3 + v * 4, springStrength: 0.14 - v * 0.11,
+      hasChord: true, chordMaxVoices: v < 0.4 ? 3 : v < 0.7 ? 3 : 4, chordSeventh: v > 0.4,
+      chordProbability: 0.3 + logV * 0.55, chordThreshold: 0.3, chordSpreadMs: 8 + v * 28,
+    };
+  }
+}
+
+function generateMelodicLine(baseDevs, maxDrift, maxStep, contourW, allowT, phraseLean, leanScale) {
+  const S = totalSteps(), roles = buildRoleScores();
+  const nb = S <= 16 ? 2 : S <= 32 ? 4 : 8, bs = Math.floor(S / nb);
+  const blocks = new Array(nb).fill(0);
+  for (let b = 0; b < nb; b++) {
+    const sl = pattern.slice(b * bs, (b + 1) * bs).filter(n => n !== null);
+    if (sl.length >= 2) blocks[b] = sl[sl.length - 1] - sl[0];
+  }
+  const result = []; let cm = 0, pDev = 0;
+  for (let i = 0; i < S; i++) {
+    if (pattern[i] === null) { result.push(0); continue; }
+    const role = roles[i];
+    const bDir = Math.sign(blocks[Math.min(Math.floor(i / bs), nb - 1)] || 0);
+    if (role > 0.5) { const d = Math.round(baseDevs[i] * 0.5); result.push(d); cm = 0; pDev = d; continue; }
+    let raw = baseDevs[i] + cm * 0.4 + phraseLean * maxDrift * (leanScale || 0.3) + bDir * (contourW || 0.4) * maxDrift * 0.14 + (Math.random() - 0.5) * maxDrift * 1.1;
+    const dc = raw - pDev;
+    if (Math.abs(dc) > maxStep) raw = pDev + Math.sign(dc) * maxStep;
+    if (Math.abs(cm) >= 2.5) raw = raw * 0.35 + (-Math.sign(cm) * maxDrift * 0.3) * 0.65;
+    if (!allowT) {
+      const oD = scaleIdxOf(pattern[i], scale);
+      const tD = ((oD + Math.round(raw)) % scale.pc.length + scale.pc.length) % scale.pc.length;
+      if ([1,3,6].includes(tD)) raw -= Math.sign(raw - baseDevs[i]) * 0.7;
+    }
+    raw = Math.max(-maxDrift, Math.min(maxDrift, raw));
+    const fd = Math.round(raw);
+    result.push(fd);
+    cm = Math.max(-maxStep, Math.min(maxStep, cm * 0.45 + (fd - pDev) * 0.55));
+    pDev = fd;
+  }
+  return result;
+}
+
+function applyOrnaments(baseDevs, activity, ornMax, allowT, ornScale) {
+  const S = totalSteps(), roles = buildRoleScores();
+  const elig = [];
+  for (let i = 0; i < S; i++) if (pattern[i] !== null && roles[i] <= 0.5) elig.push(i);
+  if (!elig.length) return [...baseDevs];
+  const result = [...baseDevs];
+  const exp  = activity * elig.length * (ornScale || 1);
+  const cnt  = Math.max(0, Math.floor(exp * 0.4)) + Math.floor(Math.random() * (Math.ceil(exp * 1.6) - Math.floor(exp * 0.4) + 1));
+  const chosen = [...elig].sort(() => Math.random() - 0.5).slice(0, Math.min(cnt, elig.length));
+  for (const i of chosen) {
+    const dir = Math.random() < 0.5 ? 1 : -1;
+    let dev = baseDevs[i] + dir;
+    if (!allowT) {
+      const oD = scaleIdxOf(pattern[i], scale);
+      const tD = ((oD + dev) % scale.pc.length + scale.pc.length) % scale.pc.length;
+      if ([1,3,6].includes(tD)) dev = baseDevs[i];
+    }
+    result[i] = Math.round(dev);
+  }
+  return result;
+}
+
+function buildSuitability() {
+  const S = totalSteps(), roles = buildRoleScores();
+  return pattern.map((note, i) => {
+    if (note === null) return 0;
+    let dist = S;
+    for (let j = i + 1; j < S; j++) { if (pattern[j] !== null) { dist = j - i; break; } }
+    return roles[i] * 0.6 + (dist >= 4 ? 1 : dist >= 2 ? 0.5 : 0.1) * 0.4;
+  });
+}
+
+function generateChordMap(params) {
+  if (!params || !params.hasChord || tier === 'LO' || linear === 0) { chordMap = {}; return; }
+  const S = totalSteps(), suit = buildSuitability(), newMap = {};
+  const { chordProbability: prob, chordThreshold: thresh, chordMaxVoices: maxV,
+          chordSeventh: seventh, chordSpreadMs: spreadMs, driftRatio } = params;
+  for (let i = 0; i < S; i++) {
+    if (pattern[i] === null || suit[i] < thresh || Math.random() > prob) continue;
+    const root = getChaosNote(i); if (root === null || !isFinite(root)) continue;
+    const ri = scaleIdxOf(root, scale), tones = [];
+
+    // chord tone voicing: keep all tones below the melody note
+    // so chord always supports from underneath, never sticks above the melody
+    // floor = C2 (36), ceiling = melody note itself
+    const CHORD_BOT = 36;  // C2
+
+    function voiceTone(rawMidi) {
+      if (!isFinite(rawMidi)) return null;
+      let m = rawMidi;
+      // fold down until below melody root
+      while (m >= root) m -= 12;
+      // fold up if went too low
+      while (m < CHORD_BOT) m += 12;
+      return m;
+    }
+
+    const third = voiceTone(scaleNoteAt(ri + 2, scale)); if (third !== null) tones.push(third);
+    if (maxV >= 3) { const fifth = voiceTone(scaleNoteAt(ri + 4, scale)); if (fifth !== null) tones.push(fifth); }
+    if (seventh && maxV >= 3 && Math.random() < 0.3) { const sev = voiceTone(scaleNoteAt(ri + 6, scale)); if (sev !== null) tones.push(sev); }
+    if (driftRatio && driftRatio > 0.7 && maxV >= 4 && Math.random() < 0.25) { const n9 = voiceTone(scaleNoteAt(ri + 8, scale)); if (n9 !== null) tones.push(n9); }
+
+    // deduplicate and sort low to high
+    const unique = [...new Set(tones)].sort((a, b) => a - b);
+    if (unique.length) newMap[i] = { tones: unique, spreadMs: spreadMs || 15 };
+  }
+  chordMap = newMap;
+}
+
+function freezeChordMap() {
+  for (const idx in chordMap) {
+    const i = parseInt(idx), root = getChaosNote(i);
+    if (!root) { delete chordMap[i]; continue; }
+    const ri = scaleIdxOf(root, scale), entry = chordMap[i];
+    chordMap[i] = {
+      tones: entry.tones.map((_, ti) => scaleNoteAt(ri + (ti === 0 ? 2 : ti === 1 ? 4 : ti === 2 ? 6 : 8), scale)).filter(isFinite),
+      spreadMs: entry.spreadMs,
+    };
+  }
+}
+
+function getChaosNote(i) {
+  const orig = pattern[i];
+  if (orig === null) return null;
+  if (linear === 0) return orig;
+  const cls = classifyNote(orig, scale);
+  const dev = deviations[i] || 0;
+  if (cls.type === 'out_of_scale') return orig;
+  if (cls.type === 'chromatic') {
+    const base = scaleNoteAt(cls.nearestScaleIdx + dev, scale);
+    return Math.random() < (tier === 'LO' ? 1 : tier === 'MID' ? 0.65 : 0.3) ? base : base + cls.semitoneOffset;
+  }
+  const note = scaleNoteAt(cls.nearestScaleIdx + dev, scale);
+  return isFinite(note) ? note : orig;
+}
+
+function generateChaosDeviations() {
+  const S = totalSteps(), params = getTierParams();
+  if (!params || linear === 0) { deviations = new Array(S).fill(0); chordMap = {}; return; }
+
+  if (tier === 'LO') {
+    const roles = buildRoleScores();
+    const elig  = [];
+    for (let i = 0; i < S; i++) if (pattern[i] !== null && roles[i] <= 0.5) elig.push(i);
+    const result = new Array(S).fill(0);
+    if (elig.length) {
+      const exp = params.ornamentActivity * elig.length * (params.ornamentScale || 1);
+      const cnt = Math.max(0, Math.floor(exp * 0.4)) + Math.floor(Math.random() * (Math.ceil(exp * 1.6) - Math.floor(exp * 0.4) + 1));
+      const chosen = [...elig].sort(() => Math.random() - 0.5).slice(0, Math.min(cnt, elig.length));
+      for (const i of chosen) {
+        const wide = params.wideOrnamentActivity > 0 && Math.random() < params.wideOrnamentActivity;
+        const dir  = Math.random() < 0.5 ? 1 : -1;
+        const dev  = wide ? dir * 2 : dir;
+        if (!params.allowTension) {
+          const oD = scaleIdxOf(pattern[i], scale);
+          const tD = ((oD + dev) % scale.pc.length + scale.pc.length) % scale.pc.length;
+          result[i] = [1,3,6].includes(tD) ? Math.sign(dev) : dev;
+        } else result[i] = dev;
+      }
+    }
+    deviations = result; avgDrift = 0; chordMap = {};
+    return;
+  }
+
+  if (tier === 'MID') {
+    // same ornament logic as LO, plus chord generation
+    const { ornamentActivity: oa, ornamentScale: os, allowTension: at } = params;
+    const S = totalSteps(), roles = buildRoleScores();
+    const elig = [];
+    for (let i = 0; i < S; i++) if (pattern[i] !== null && roles[i] <= 0.5) elig.push(i);
+    const result = new Array(S).fill(0);
+    if (elig.length) {
+      const exp = oa * elig.length * (os || 1);
+      const cnt = Math.max(0, Math.floor(exp * 0.4)) + Math.floor(Math.random() * (Math.ceil(exp * 1.6) - Math.floor(exp * 0.4) + 1));
+      const chosen = [...elig].sort(() => Math.random() - 0.5).slice(0, Math.min(cnt, elig.length));
+      for (const i of chosen) {
+        const wide = params.wideOrnamentActivity > 0 && Math.random() < params.wideOrnamentActivity;
+        const dir  = Math.random() < 0.5 ? 1 : -1;
+        const dev  = wide ? dir * 2 : dir;
+        if (!at) {
+          const oD = scaleIdxOf(pattern[i], scale);
+          const tD = ((oD + dev) % scale.pc.length + scale.pc.length) % scale.pc.length;
+          result[i] = [1,3,6].includes(tD) ? Math.sign(dev) : dev;
+        } else result[i] = dev;
+      }
+    }
+    deviations = result; avgDrift = 0;
+    generateChordMap(params);
+    return;
+  }
+
+  if (tier === 'HI') {
+    const { driftRatio: dr, evolveMaxDrift: emd, stableLoops: sl, ornamentActivity: oa, ornamentMaxDrift: omd,
+            ornamentScale: os, allowTension: at, contourWeight: cw, maxStepInterval: msi, phraseLeanScale: pls,
+            driftIncrement: di, springThreshold: st2, springStrength: ss } = params;
+
+    if (dr < 1) {
+      if (phase === 'stable') {
+        deviations = applyOrnaments(committedDeviations, oa, omd, at, os);
+        freezeChordMap(); phaseCountdown--;
+        if (phaseCountdown <= 0) phase = 'evolving';
+      } else {
+        const cAvg = avg(committedDeviations);
+        const spring = Math.abs(cAvg) > emd * 0.55 ? -Math.sign(cAvg) * 0.9 : 0;
+        const phraseLean = spring !== 0 ? spring : (Math.random() - 0.5) * 2 * (1 + dr * 0.5) * (0.5 + (pls || 0.4));
+        committedDeviations = generateMelodicLine(committedDeviations, emd, msi, cw, at, phraseLean, pls);
+        const actualLoops = Math.round((Math.max(0, sl) + (Math.random() < 0.4 ? 1 : 0)) * (1 - dr));
+        if (actualLoops > 0) { phase = 'stable'; phaseCountdown = actualLoops; }
+        deviations = applyOrnaments(committedDeviations, oa * 0.5, omd, at, os);
+        avgDrift = avg(committedDeviations);
+        generateChordMap(params);
+      }
+    } else {
+      const sp = springPressure;
+      const phraseLean = Math.max(-1, Math.min(1, sp * 0.6 + (Math.random() - 0.5) * 2 * (0.55 + (linear / 100) * 0.35)));
+      const rel  = generateMelodicLine(new Array(S).fill(0), di * 1.5, msi, cw, at, phraseLean, pls);
+      const newH = hiDeviations.map((cur, i) => pattern[i] === null ? 0 : (isFinite(cur + rel[i]) ? cur + rel[i] : cur));
+      const ha   = newH.filter((_, i) => pattern[i] !== null);
+      const hiAvg = ha.length ? ha.reduce((a, b) => a + b, 0) / ha.length : 0;
+      if (!isFinite(hiAvg)) { hiDeviations = new Array(S).fill(0); springPressure = 0; avgDrift = 0; deviations = new Array(S).fill(0); return; }
+      if (Math.abs(hiAvg) > st2) {
+        hiDeviations   = newH.map(d => isFinite(d) ? d * (1 - ss) : 0);
+        springPressure = -Math.sign(hiAvg) * 0.8;
+      } else {
+        const lim = st2 * 2;
+        hiDeviations   = newH.map(d => isFinite(d) ? Math.max(-lim, Math.min(lim, d)) : 0);
+        springPressure *= 0.55;
+      }
+      const wO = applyOrnaments(hiDeviations.map(d => Math.round(isFinite(d) ? d : 0)), oa, omd, at, os);
+      deviations = wO.map((dev, i) => {
+        if (pattern[i] === null) return 0;
+        const cls = classifyNote(pattern[i], scale);
+        const ti  = cls.nearestScaleIdx + dev;
+        return (ti < 0 || ti >= scale.notes.length) ? Math.max(-scale.notes.length / 2, Math.min(scale.notes.length / 2, dev)) : dev;
+      });
+      avgDrift = hiAvg;
+      generateChordMap(params);
+    }
+  }
+}
+
+function avg(arr) {
+  const ns = arr.filter((_, i) => pattern[i] !== null);
+  return ns.length ? ns.reduce((a, b) => a + b, 0) / ns.length : 0;
+}
+
+// Immediately nudge deviations towards what the new params would produce,
+// without waiting for the next loop boundary.
+// smoothFactor: 0 = no change, 1 = instant jump (we use 0.35-0.6)
+function nudgeDeviations(smoothFactor) {
+  const S = totalSteps();
+  const params = getTierParams();
+  if (!params || linear === 0) return;
+
+  // compute a fresh target deviation set
+  const savedDev  = [...deviations];
+  const savedComm = [...committedDeviations];
+  const savedHi   = [...hiDeviations];
+  const savedPhase = phase, savedPC = phaseCountdown, savedSP = springPressure;
+
+  generateChaosDeviations();
+  const targetDev = [...deviations];
+
+  // restore state — we only want the interpolated result, not the full state flip
+  deviations          = savedDev;
+  committedDeviations = savedComm;
+  hiDeviations        = savedHi;
+  phase = savedPhase; phaseCountdown = savedPC; springPressure = savedSP;
+
+  // interpolate current → target
+  for (let i = 0; i < S; i++) {
+    if (pattern[i] === null) continue;
+    deviations[i] = Math.round(
+      deviations[i] * (1 - smoothFactor) + targetDev[i] * smoothFactor
+    );
+  }
+
+  refreshGroove();
+  drawCanvas();
+}
+
+// ═══════════════════════════════════════════════
+// AUDIO
+// ═══════════════════════════════════════════════
+let audioCtx = null;
+function getAudio() { if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)(); return audioCtx; }
+
+function playNote(midi, time, dur = 0.15, vel = 1.0) {
+  if (!isFinite(midi) || midi < 0 || midi > 127) return;
+  const ctx = getAudio(), freq = 440 * Math.pow(2, (midi - 69) / 12);
+  if (!isFinite(freq) || freq <= 0) return;
+  const vol = Math.max(0.01, Math.min(1, vel));
+  const mA = ctx.createOscillator(), mAG = ctx.createGain();
+  mA.type = 'sine'; mA.frequency.setValueAtTime(freq * 3, time);
+  mAG.gain.setValueAtTime(freq * 1.4, time); mAG.gain.exponentialRampToValueAtTime(freq * 0.01, time + 0.06);
+  const mB = ctx.createOscillator(), mBG = ctx.createGain();
+  mB.type = 'sine'; mB.frequency.setValueAtTime(freq, time);
+  const mBI = freq * 0.42;
+  mBG.gain.setValueAtTime(mBI * 0.4, time); mBG.gain.linearRampToValueAtTime(mBI, time + 0.01);
+  mBG.gain.exponentialRampToValueAtTime(mBI * 0.22, time + 0.2); mBG.gain.exponentialRampToValueAtTime(0.001, time + Math.max(dur * 3.5, 0.8));
+  const car = ctx.createOscillator(), env = ctx.createGain();
+  car.type = 'sine'; car.frequency.setValueAtTime(freq, time);
+  env.gain.setValueAtTime(0.001, time); env.gain.linearRampToValueAtTime(0.26 * vol, time + 0.008);
+  env.gain.exponentialRampToValueAtTime(0.16 * vol, time + 0.05); env.gain.exponentialRampToValueAtTime(0.10 * vol, time + 0.2);
+  env.gain.exponentialRampToValueAtTime(0.001, time + Math.max(dur * 3.5, 0.8));
+  const mg = ctx.createGain(); mg.gain.setValueAtTime(0.5, time);
+  mA.connect(mAG); mB.connect(mBG); mAG.connect(car.frequency); mBG.connect(car.frequency);
+  car.connect(env); env.connect(mg); mg.connect(ctx.destination);
+  const end = time + Math.max(dur * 3.5, 0.8) + 0.1;
+  [mA, mB, car].forEach(o => { o.start(time); o.stop(end); });
+}
+
+function playChordNote(midi, time, rootDur, vel = 0.45) {
+  if (!isFinite(midi) || midi < 0 || midi > 127) return;
+  const ctx = getAudio(), freq = 440 * Math.pow(2, (midi - 69) / 12);
+  if (!isFinite(freq) || freq <= 0) return;
+  const vol = Math.max(0.01, Math.min(1, vel));
+  const mB = ctx.createOscillator(), mBG = ctx.createGain();
+  mB.type = 'sine'; mB.frequency.setValueAtTime(freq, time);
+  mBG.gain.setValueAtTime(0, time); mBG.gain.linearRampToValueAtTime(freq * 0.28, time + 0.025);
+  mBG.gain.exponentialRampToValueAtTime(0.001, time + Math.max(rootDur * 5, 1.2));
+  const car = ctx.createOscillator(), env = ctx.createGain();
+  car.type = 'sine'; car.frequency.setValueAtTime(freq, time);
+  env.gain.setValueAtTime(0, time); env.gain.linearRampToValueAtTime(0.14 * vol, time + 0.03);
+  env.gain.exponentialRampToValueAtTime(0.07 * vol, time + 0.2); env.gain.exponentialRampToValueAtTime(0.001, time + Math.max(rootDur * 5, 1.2));
+  const mg = ctx.createGain(); mg.gain.setValueAtTime(0.5, time);
+  mB.connect(mBG); mBG.connect(car.frequency); car.connect(env); env.connect(mg); mg.connect(ctx.destination);
+  const end = time + Math.max(rootDur * 5, 1.2) + 0.1;
+  [mB, car].forEach(o => { o.start(time); o.stop(end); });
+}
+
+// ═══════════════════════════════════════════════
+// SEQUENCER
+// ═══════════════════════════════════════════════
+let bpm = 90;
+const LOOK = 0.1, SCHED = 0.05;
+function stepDur() { return (60 / bpm) / 4; }
+
+let playing = false, schedulerTimer = null, curStep = -1, nextTime = 0;
+
+function schedStep(step, time) {
+  if (muted) return;
+  const dur  = stepDur() * 0.7;
+  const note = getChaosNote(step);
+  if (note !== null) {
+    playNote(note, time, dur);
+    const chord = chordMap[step];
+    if (chord && chord.tones.length) {
+      const sp = (chord.spreadMs || 15) / 1000;
+      chord.tones.forEach((m, idx) => playChordNote(m, time + sp * (idx + 1), dur, [0.55, 0.38, 0.26, 0.18][idx] || 0.18));
+    }
+  }
+  setTimeout(() => vizStep(step), Math.max(0, (time - getAudio().currentTime) * 1000));
+}
+
+function startPlay() {
+  curStep = -1; nextTime = getAudio().currentTime + 0.05;
+  rebuildChaosState();
+  schedulerTimer = setInterval(() => {
+    const ctx = getAudio();
+    while (nextTime < ctx.currentTime + LOOK) {
+      const step = (curStep + 1) % totalSteps();
+      curStep = step;
+      if (step === 0) {
+        loopCount++;
+        generateChaosDeviations();
+        document.getElementById('loopCount').textContent = loopCount;
+        updateStatus();
+        drawCanvas();
+        logEntry();
+        rebuildPageBtns(); // refresh has-notes indicators
+      }
+      schedStep(step, nextTime);
+      nextTime += stepDur();
+    }
+  }, SCHED * 1000);
+  playing = true;
+}
+
+function stopPlay() {
+  if (schedulerTimer) { clearInterval(schedulerTimer); schedulerTimer = null; }
+  playing = false; curStep = -1;
+  document.querySelectorAll('.step-cell.playing').forEach(e => e.classList.remove('playing'));
+  document.querySelectorAll('.pg-btn.seq').forEach(e => e.classList.remove('seq'));
+  document.getElementById('globalStep').textContent = '—';
+}
+
+let lastVizStep = -1;
+function vizStep(step) {
+  // clear previous
+  if (lastVizStep >= 0) {
+    const prev = document.querySelector(`.step-cell[data-step="${lastVizStep}"]`);
+    if (prev) prev.classList.remove('playing');
+    const pnum = document.querySelector(`.step-num-label[data-step="${lastVizStep}"]`);
+    if (pnum) pnum.classList.remove('playing');
+  }
+  lastVizStep = step;
+  const el = document.querySelector(`.step-cell[data-step="${step}"]`);
+  if (el) el.classList.add('playing');
+  const nm = document.querySelector(`.step-num-label[data-step="${step}"]`);
+  if (nm) nm.classList.add('playing');
+
+  // page indicator
+  const pg = Math.floor(step / 16);
+  document.querySelectorAll('.pg-btn').forEach((b, i) => b.classList.toggle('seq', i === pg));
+
+  document.getElementById('globalStep').textContent = step + 1;
+}
+
+// ═══════════════════════════════════════════════
+// GROOVEBOX UI
+// ═══════════════════════════════════════════════
+// drag state
+let drag = null; // { step, startY, startMidi }
+
+function buildGroove() {
+  const numRow = document.getElementById('stepNums');
+  const sRow   = document.getElementById('stepsRow');
+  numRow.innerHTML = '';
+  sRow.innerHTML   = '';
+
+  const off = pageOff(curPage);
+
+  for (let col = 0; col < 16; col++) {
+    const absStep = off + col;
+
+    // step number
+    const nl = document.createElement('div');
+    nl.className = 'step-num-label' + (col % 4 === 0 ? ' beat' : '');
+    nl.dataset.step = absStep;
+    nl.textContent = absStep + 1;
+    numRow.appendChild(nl);
+
+    // cell
+    const cell = document.createElement('div');
+    cell.className = 'step-cell' + (col % 4 === 0 ? ' beat-start' : '');
+    cell.dataset.step = absStep;
+
+    // beat dot
+    const bd = document.createElement('div');
+    bd.className = 'beat-dot';
+    cell.appendChild(bd);
+
+    // pitch bar (filled height shows pitch)
+    const pb = document.createElement('div');
+    pb.className = 'pitch-bar';
+    cell.appendChild(pb);
+
+    // chaos bar
+    const cb = document.createElement('div');
+    cb.className = 'chaos-bar-el';
+    cell.appendChild(cb);
+
+    // chaos name
+    const cn = document.createElement('div');
+    cn.className = 'chaos-name';
+    cell.appendChild(cn);
+
+    // note name
+    const nn = document.createElement('div');
+    nn.className = 'note-name';
+    cell.appendChild(nn);
+
+    updateCellDisplay(cell, absStep);
+
+    cell.addEventListener('mousedown', onMouseDown);
+    cell.addEventListener('touchstart', onTouchStart, { passive: false });
+    sRow.appendChild(cell);
+  }
+}
+
+function updateCellDisplay(cell, step) {
+  const note  = pattern[step];
+  const chaos = getChaosNote(step);
+  const on    = note !== null;
+
+  cell.classList.toggle('on', on);
+
+  // pitch bar
+  const pb = cell.querySelector('.pitch-bar');
+  if (on) {
+    const h = pitchNorm(note) * 88 + 4; // % of cell height
+    pb.style.height = h + '%';
+    pb.style.opacity = '1';
+  } else {
+    pb.style.height = '0%';
+    pb.style.opacity = '0';
+  }
+
+  // note name
+  const nn = cell.querySelector('.note-name');
+  nn.textContent = on ? midiName(note) : '';
+
+  // chaos
+  const hasChaos = chaos !== null && chaos !== note && tier !== 'OFF' && linear > 0;
+  const cb = cell.querySelector('.chaos-bar-el');
+  const cn = cell.querySelector('.chaos-name');
+  if (hasChaos) {
+    const ch = pitchNorm(chaos) * 88 + 4;
+    cb.style.height   = ch + '%';
+    cb.style.background = chaosColor();
+    cb.style.opacity    = '1';
+    cn.textContent      = midiName(chaos);
+    cn.style.color      = chaosColor();
+  } else {
+    cb.style.height  = '0';
+    cb.style.opacity = '0';
+    cn.textContent   = '';
+  }
+}
+
+function refreshGroove() {
+  const off = pageOff(curPage);
+  for (let col = 0; col < 16; col++) {
+    const absStep = off + col;
+    const cell = document.querySelector(`.step-cell[data-step="${absStep}"]`);
+    if (cell) updateCellDisplay(cell, absStep);
+  }
+}
+
+function chaosColor() {
+  if (tier === 'LO')  return '#3dd68c';
+  if (tier === 'MID') return '#818cf8';
+  if (tier === 'HI')  return '#fb923c';
+  return '#818cf8';
+}
+
+function pitchNorm(midi) {
+  return (midi - NOTE_MIN) / (NOTE_MAX - NOTE_MIN);
+}
+
+// ── drag / click ──
+function onMouseDown(e) {
+  e.preventDefault();
+  const step = parseInt(e.currentTarget.dataset.step);
+  const note = pattern[step];
+
+  if (note === null) {
+    // place note at C4, mark as newly placed
+    pattern[step] = NOTE_DEF;
+    const cell = e.currentTarget;
+    updateCellDisplay(cell, step);
+    detectKey();
+    drawCanvas();
+    drag = { step, startY: e.clientY, startMidi: NOTE_DEF, isNew: true };
+    document.body.classList.add('dragging');
+  } else {
+    // drag on existing note
+    drag = { step, startY: e.clientY, startMidi: note, isNew: false };
+    document.body.classList.add('dragging');
+  }
+}
+
+// ── shared drag logic ──
+function doDragMove(clientY) {
+  if (!drag) return;
+  const dy       = drag.startY - clientY;
+  const semitones = Math.round(dy / 8);
+  const newMidi  = Math.max(NOTE_MIN, Math.min(NOTE_MAX, drag.startMidi + semitones));
+  if (pattern[drag.step] !== newMidi) {
+    pattern[drag.step] = newMidi;
+    const cell = document.querySelector(`.step-cell[data-step="${drag.step}"]`);
+    if (cell) updateCellDisplay(cell, drag.step);
+    drawCanvas();
+  }
+}
+
+function doDragEnd(clientY) {
+  if (!drag) return;
+  const step     = drag.step;
+  const hasMoved = Math.abs(drag.startY - clientY) > 3;
+  if (!drag.isNew && !hasMoved && pattern[step] !== null) {
+    pattern[step] = null;
+    const cell = document.querySelector(`.step-cell[data-step="${step}"]`);
+    if (cell) updateCellDisplay(cell, step);
+    drawCanvas();
+  }
+  drag = null;
+  document.body.classList.remove('dragging');
+  detectKey();
+  rebuildPageBtns();
+}
+
+// ── mouse ──
+document.addEventListener('mousemove', e => doDragMove(e.clientY));
+document.addEventListener('mouseup',   e => doDragEnd(e.clientY));
+
+// ── touch ──
+function onTouchStart(e) {
+  e.preventDefault();
+  const touch = e.touches[0];
+  const step  = parseInt(e.currentTarget.dataset.step);
+  const note  = pattern[step];
+  if (note === null) {
+    pattern[step] = NOTE_DEF;
+    const cell = e.currentTarget;
+    updateCellDisplay(cell, step);
+    detectKey();
+    drawCanvas();
+    drag = { step, startY: touch.clientY, startMidi: NOTE_DEF, isNew: true };
+  } else {
+    drag = { step, startY: touch.clientY, startMidi: note, isNew: false };
+  }
+  document.body.classList.add('dragging');
+}
+
+document.addEventListener('touchmove', e => {
+  if (!drag) return;
+  e.preventDefault();
+  doDragMove(e.touches[0].clientY);
+}, { passive: false });
+
+document.addEventListener('touchend', e => {
+  if (!drag) return;
+  const touch = e.changedTouches[0];
+  doDragEnd(touch.clientY);
+});
+
+// ═══════════════════════════════════════════════
+// CANVAS
+// ═══════════════════════════════════════════════
+function drawCanvas() {
+  const canvas = document.getElementById('cvs');
+  if (!canvas) return;
+  const ctx2 = canvas.getContext('2d');
+  const dpr  = window.devicePixelRatio || 1;
+  canvas.width  = canvas.offsetWidth  * dpr;
+  canvas.height = canvas.offsetHeight * dpr;
+  ctx2.scale(dpr, dpr);
+  const W = canvas.offsetWidth, H = canvas.offsetHeight;
+  ctx2.clearRect(0, 0, W, H);
+
+  const S     = totalSteps();
+  const orig  = [...pattern];
+  const chaos = orig.map((_, i) => getChaosNote(i));
+  const allN  = [...orig, ...chaos].filter(n => n !== null);
+  if (!allN.length) return;
+
+  const minN = Math.min(...allN) - 1, maxN = Math.max(...allN) + 1, range = maxN - minN || 1;
+  const sw   = W / S;
+  const yOf  = n => H - ((n - minN) / range) * H * 0.84 - H * 0.05;
+
+  // grid
+  ctx2.strokeStyle = 'rgba(34,34,58,.8)'; ctx2.lineWidth = 1;
+  for (let i = 0; i <= 3; i++) { const y = H * (i / 3); ctx2.beginPath(); ctx2.moveTo(0, y); ctx2.lineTo(W, y); ctx2.stroke(); }
+
+  // page dividers
+  for (let p = 1; p < numPages; p++) {
+    const x = p * 16 * sw;
+    ctx2.strokeStyle = 'rgba(56,189,248,.12)'; ctx2.setLineDash([3,3]); ctx2.lineWidth = 1;
+    ctx2.beginPath(); ctx2.moveTo(x, 0); ctx2.lineTo(x, H); ctx2.stroke();
+    ctx2.setLineDash([]);
+  }
+
+  // orig line
+  ctx2.strokeStyle = 'rgba(100,160,200,.28)'; ctx2.lineWidth = 1.2; ctx2.beginPath(); let s = false;
+  for (let i = 0; i < S; i++) { if (orig[i] === null) continue; const x = i * sw + sw / 2, y = yOf(orig[i]); if (!s) { ctx2.moveTo(x, y); s = true; } else ctx2.lineTo(x, y); }
+  ctx2.stroke();
+
+  const hc = tier !== 'OFF' && linear > 0;
+  if (hc) {
+    const cc = chaosColor();
+    ctx2.strokeStyle = cc + 'cc'; ctx2.lineWidth = 1.8; ctx2.beginPath(); let cs = false;
+    for (let i = 0; i < S; i++) { if (chaos[i] === null) continue; const x = i * sw + sw / 2, y = yOf(chaos[i]); if (!cs) { ctx2.moveTo(x, y); cs = true; } else ctx2.lineTo(x, y); }
+    ctx2.stroke();
+    for (let i = 0; i < S; i++) {
+      if (orig[i] === null || chaos[i] === null || orig[i] === chaos[i]) continue;
+      ctx2.strokeStyle = cc + '28'; ctx2.lineWidth = 1; ctx2.setLineDash([2,2]);
+      ctx2.beginPath(); ctx2.moveTo(i * sw + sw / 2, yOf(orig[i])); ctx2.lineTo(i * sw + sw / 2, yOf(chaos[i])); ctx2.stroke();
+      ctx2.setLineDash([]);
+    }
+  }
+  for (let i = 0; i < S; i++) { if (orig[i] === null) continue; ctx2.fillStyle = 'rgba(100,160,200,.55)'; ctx2.beginPath(); ctx2.arc(i * sw + sw / 2, yOf(orig[i]), 2, 0, Math.PI * 2); ctx2.fill(); }
+  if (hc) {
+    const cc = chaosColor();
+    for (let i = 0; i < S; i++) { if (chaos[i] === null) continue; ctx2.fillStyle = cc; ctx2.beginPath(); ctx2.arc(i * sw + sw / 2, yOf(chaos[i]), 2.5, 0, Math.PI * 2); ctx2.fill(); }
+  }
+}
+
+// ═══════════════════════════════════════════════
+// STATUS + LOG
+// ═══════════════════════════════════════════════
+function updateStatus() {
+  const el = document.getElementById('statusPill');
+  if (tier === 'OFF') { el.innerHTML = 'CHAOS P <span class="sp-mid">OFF</span>'; return; }
+  let ph = '';
+  if (tier === 'HI') {
+    const p = getTierParams(); const dr = p ? p.driftRatio : 0;
+    ph = ` · <span class="sp-mid">${dr < 0.05 ? 'commit' : dr > 0.95 ? 'drift' : '~' + Math.round(dr * 100) + '%'}</span>`;
+    if (Math.abs(springPressure) > 0.15) ph += ` <span class="sp-spr">SPR</span>`;
+  }
+  const ch = Object.keys(chordMap).length;
+  const cs = (tier === 'MID' || tier === 'HI') && ch > 0 && linear > 0 ? ` · <span class="sp-ch">♩${ch}</span>` : '';
+  const tc = tier === 'LO' ? 'sp-lo' : tier === 'HI' ? 'sp-hi' : 'sp-mid';
+  el.innerHTML = `<span class="${tc}">${tier}</span> ${linear} · avg:${avgDrift.toFixed(1)}${ph}${cs}`;
+}
+
+function logEntry() {
+  const log = document.getElementById('logScroll'), p = getTierParams();
+  if (!p) return;
+  const diffs = deviations.filter((d, i) => pattern[i] !== null && d !== 0).length;
+  let ph = '';
+  if (tier === 'HI') { const dr = p.driftRatio; ph = dr < 0.05 ? 'commit' : dr > 0.95 ? 'drift' : `~${Math.round(dr*100)}%`; }
+  const ch = Object.keys(chordMap).length;
+  const e  = document.createElement('div');
+  e.className = 'log-entry';
+  const tc = tier === 'LO' ? 'tag-lo' : tier === 'HI' ? 'tag-hi' : 'tag-mid';
+  e.innerHTML = `<span class="${tc}">[${tier}]</span> L${loopCount} v:${linear} ${diffs}Δ avg:${avgDrift.toFixed(1)} ${ph}${ch && linear > 0 ? ' ♩' + ch : ''}`;
+  log.insertBefore(e, log.firstChild);
+  while (log.children.length > 40) log.removeChild(log.lastChild);
+}
+
+// ═══════════════════════════════════════════════
+// PAGES
+// ═══════════════════════════════════════════════
+function addPage() {
+  if (numPages >= 8) return;
+  numPages++;
+  pattern = [...pattern, ...new Array(16).fill(null)];
+  rebuildChaosState();
+  rebuildPageBtns();
+  document.getElementById('totalStepsLabel').textContent = totalSteps();
+}
+
+function removePage() {
+  if (numPages <= 1) return;
+  numPages--;
+  pattern = pattern.slice(0, totalSteps());
+  if (curPage >= numPages) { curPage = numPages - 1; buildGroove(); }
+  rebuildChaosState();
+  rebuildPageBtns();
+  document.getElementById('totalStepsLabel').textContent = totalSteps();
+}
+
+function rebuildPageBtns() {
+  const wrap = document.getElementById('pgBtns');
+  wrap.innerHTML = '';
+  for (let p = 0; p < numPages; p++) {
+    const b = document.createElement('button');
+    const has = pattern.slice(pageOff(p), pageOff(p) + 16).some(n => n !== null);
+    b.className = 'pg-btn' + (p === curPage ? ' cur' : '') + (has ? ' has' : '');
+    b.textContent = p + 1;
+    b.onclick = () => { curPage = p; rebuildPageBtns(); buildGroove(); };
+    wrap.appendChild(b);
+  }
+  document.getElementById('pgAdd').disabled = numPages >= 8;
+  document.getElementById('pgRm').disabled  = numPages <= 1;
+}
+
+// ═══════════════════════════════════════════════
+// CONTROLS
+// ═══════════════════════════════════════════════
+function togglePlay() {
+  if (playing) { stopPlay(); document.getElementById('playBtn').textContent = '▶ PLAY'; document.getElementById('playBtn').classList.remove('active'); }
+  else         { startPlay(); document.getElementById('playBtn').textContent = '⏸ PAUSE'; document.getElementById('playBtn').classList.add('active'); }
+}
+function toggleMute() {
+  muted = !muted;
+  document.getElementById('muteBtn').classList.toggle('muted', muted);
+  document.getElementById('muteBtn').textContent = muted ? 'UNMUTE' : 'MUTE';
+}
+function clearAll() {
+  pattern = new Array(totalSteps()).fill(null);
+  rebuildChaosState(); buildGroove(); drawCanvas();
+  document.getElementById('keyDet').textContent = '—'; detRoot = null; detType = null;
+  rebuildPageBtns();
+}
+let lastLinear = 0;
+function setLinear(v) {
+  const prev = linear;
+  linear = parseInt(v);
+  document.getElementById('slVal').textContent = v;
+  if (linear === 0) {
+    deviations = new Array(totalSteps()).fill(0);
+    committedDeviations = new Array(totalSteps()).fill(0);
+    hiDeviations = new Array(totalSteps()).fill(0);
+    phase = 'evolving'; phaseCountdown = 0; springPressure = 0; chordMap = {};
+    refreshGroove(); updateStatus(); drawCanvas();
+    return;
+  }
+  // smooth factor scales with how much the slider moved
+  const delta = Math.abs(linear - prev) / 100;
+  const smoothFactor = Math.min(0.65, 0.25 + delta * 0.8);
+  updateStatus();
+  nudgeDeviations(smoothFactor);
+}
+function changeBpm(d) { bpm = Math.max(40, Math.min(220, bpm + d)); document.getElementById('bpmVal').textContent = bpm; }
+
+// ═══════════════════════════════════════════════
+// INIT
+// ═══════════════════════════════════════════════
+function buildTierBtns() {
+  const wrap = document.getElementById('tierRow');
+  ['OFF','LO','MID','HI'].forEach(t => {
+    const b = document.createElement('button');
+    b.className = `t-btn ${t.toLowerCase()}${t === 'OFF' ? ' active' : ''}`;
+    b.textContent = t;
+    b.onclick = () => {
+      wrap.querySelectorAll('.t-btn').forEach(x => x.classList.remove('active'));
+      b.classList.add('active'); tier = t;
+      committedDeviations = new Array(totalSteps()).fill(0);
+      hiDeviations        = new Array(totalSteps()).fill(0);
+      phase = 'evolving'; phaseCountdown = 0; springPressure = 0; chordMap = {};
+      updateStatus();
+      if (linear > 0) nudgeDeviations(0.55);
+      else { refreshGroove(); drawCanvas(); }
+    };
+    wrap.appendChild(b);
+  });
+}
+
+function buildKeyBtns() {
+  const rw = document.getElementById('rootBtns');
+  const sw = document.getElementById('scaleBtns');
+  PC_NAMES.forEach((name, pc) => {
+    const b = document.createElement('button');
+    b.className = 'k-btn' + (pc === scaleRoot ? ' active' : '');
+    b.textContent = name;
+    b.onclick = () => { scaleRoot = pc; scale = buildScale(scaleRoot, scaleType); updateKeyUI(); rebuildChaosState(); refreshGroove(); drawCanvas(); };
+    rw.appendChild(b);
+  });
+  Object.keys(SCALE_TEMPLATES).forEach(type => {
+    const b = document.createElement('button');
+    b.className = 'k-btn' + (type === scaleType ? ' active' : '');
+    b.dataset.t = type;
+    b.textContent = type;
+    b.onclick = () => { scaleType = type; scale = buildScale(scaleRoot, scaleType); updateKeyUI(); rebuildChaosState(); refreshGroove(); drawCanvas(); };
+    sw.appendChild(b);
+  });
+}
+
+window.addEventListener('load', () => {
+  buildTierBtns();
+  buildKeyBtns();
+  rebuildPageBtns();
+  buildGroove();
+  drawCanvas();
+  updateStatus();
+});
+
+window.addEventListener('resize', drawCanvas);
+</script>
+</body>
+</html>
